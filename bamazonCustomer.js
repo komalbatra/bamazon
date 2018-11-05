@@ -9,7 +9,7 @@ var connection = mysql.createConnection({
   host: "localhost",
   port: 3306,
   user: "root",
-  password: "",
+  password: "", //password
   database: "bamazon"
 });
 
@@ -41,7 +41,7 @@ function showProducts(){
             }
         });
         console.log(chalk.bold("\n\tBelow is a list of items you can purchase from our store"));
-        console.log("\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+        console.log("\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
         for(var i=0; i <res.length; i++){
             table.push ([res[i].item_id, res[i].product_name, "$" + res[i].price]);
         }
@@ -62,7 +62,7 @@ function buyProducts(){
                 if (value!=="" && isNaN(value) == false &&  value<11 ) {
                     return true;
                 } else {
-                    return chalk.red.bold("***ERROR***: Invalid ID, enter a valid ID from the list");
+                    return chalk.bgRed("**ERROR** Invalid ID, enter a valid ID from the list");
                 }
             }
         },
@@ -74,7 +74,7 @@ function buyProducts(){
                 if (value!=="" && isNaN(value) == false) {
                     return true;
                 } else {
-                    return chalk.red.bold("***ERROR***: Enter a number");
+                    return chalk.bgRed("**ERROR** Enter a number");
                 }
             }
         }
@@ -83,25 +83,24 @@ function buyProducts(){
         var query = "SELECT item_id,product_name, stock_quantity, price FROM products WHERE item_id = ?";
         connection.query(query, [answer.chosenItem], function(err, res){
             for (var i = 0; i <res.length; i++) {
-                console.log("\nYour choice " + res[i].product_name);
+                console.log(chalk.yellow("\nYour product choice is: ") + chalk.white.bold(res[i].product_name) + " " + chalk.yellow("for a quantity of") + " " + chalk.white.bold(answer.chosenQty));
+                console.log(chalk.yellow("\nWe currently have a quantity of ") + chalk.white.bold(res[i].stock_quantity) + " " + chalk.yellow("for this product"));
                 if(res[i].stock_quantity <answer.chosenQty){
-                    console.log (chalk.red.bold("\nSorry there is not enough quantity of this product in stock.\n"));
+                    console.log (chalk.bgRed("\nSorry there is not enough quantity of this product in stock.\n"));
                     nextOption();
-                    // showProducts();
                 }
                 else {
-                    console.log ("You Purchased" + res[i].product_name + "with qty of" + answer.chosenQty);
+                    console.log(chalk.inverse("\n\t*****************************************************"));
+                    console.log(chalk.inverse("\tYour order has been processed.Thank you for Shopping!"));
+                    console.log(chalk.inverse("\t*****************************************************"));
+                    console.log (chalk.inverse.bold("\tYou purchased" + " " + chalk.underline(res[i].product_name) + " " + "with quantity of" + " " + chalk.underline(answer.chosenQty) + ".            "));
                     var purchaseTotal = res[i].price * answer.chosenQty;
-                    console.log (" Your total is $" + purchaseTotal);
+                    console.log(chalk.inverse.bold("\tYour total COST is $" + purchaseTotal + "                             "));
+                    console.log(chalk.inverse.bold("\t*****************************************************"));
                     var newQty = res[i].stock_quantity - answer.chosenQty;
-                    console.log ("We have :" + newQty + "remaining for this product");
+                    console.log (chalk.green("\nWe now have a quantity of " + newQty + "  remaining for this product\n"));
                     //Updating stock quantity in the database
                     connection.query("UPDATE products SET stock_quantity = " + newQty +" WHERE item_id = " + res[i].item_id, function(err, res){
-                    console.log('');
-                    console.log("********************************")
-                    console.log(chalk.green.bold("Your order has been processed.Thank you for Shopping!"));
-                    console.log("********************************")
-                    console.log('');
                     nextOption();
                     });
                 }
@@ -116,8 +115,7 @@ function nextOption(){
         {
             name: "continue",
             type: "confirm",
-            message: "Do you want to puchase another product?",
-            // default: true
+            message: chalk.green("Do you want to puchase another product?")
         }
     ])
     .then(function(response){
@@ -126,7 +124,8 @@ function nextOption(){
             showProducts();
         }
         else{
-            console.log ("Good Bye");
+            console.log ("\n\tThank you for visiting!");
+            console.log ("\n\t\tGOOD BYE!");
             connection.end();
         }
     })
